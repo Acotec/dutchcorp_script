@@ -439,10 +439,9 @@ function Runcode(response = null) {
             .join("");
     };
     function update_DontOpen(linkName) {
-        if(/notauthenticated|proxyusernameandport/ig.test(linkname)){
+        if(/notauthenticated|proxyusernameandport/ig.test(linkName)){
             DEBUG&&console.log('Wrong Shortlink_Name');
-            return
-        }
+        }else{
         _DontOpen.push(linkName.toLowerCase())
         DEBUG&&console.log(_DontOpen)
         DEBUG&&console.log(shortlinks_name)
@@ -478,7 +477,8 @@ function Runcode(response = null) {
             .then(response => response.text())
             .then(result => DEBUG&&console.log(discription))//console.log(result);
             .catch(error => DEBUG&&console.log('error', error));
-    }
+        }
+    };
 
     function clickOnEle(el) {
         var simulateMouseEvent = function(element, eventName, coordX, coordY) {
