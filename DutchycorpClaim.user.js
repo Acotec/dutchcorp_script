@@ -439,7 +439,9 @@ function Runcode(response = null) {
             .join("");
     };
     function update_DontOpen(linkName) {
-        if(/notauthenticated|proxyusernameandport/ig.test(linkName)){
+        if(/notauthenticated|proxyusernameandport/ig.test(_DontOpen)||
+           /notauthenticated|proxyusernameandport/ig.test(shortlinks_name)
+          ){
             DEBUG&&console.log('Wrong Shortlink_Name');
         }else{
         _DontOpen.push(linkName.toLowerCase())
