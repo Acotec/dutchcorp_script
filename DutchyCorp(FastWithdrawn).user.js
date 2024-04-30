@@ -35,19 +35,30 @@
         WithButton.parentNode.insertBefore(addpar, WithButton.nextSibling);
         document.querySelector("#toast-container")&&document.querySelector("#toast-container").remove()
         document.querySelector("#user_exchange")&&document.querySelector("#user_exchange").remove()
-    }
+    };
+
     async function addButton() {
         let container1,container2;
         container1 = document.querySelector('sup');
         container2 = document.querySelector("#all_submit")
         if (container1||container2) {
-            container1.innerHTML += '<a href="#r" id="fastWithdrawal1"> Withdraw</a>';
-            document.querySelector('#fastWithdrawal1').onclick = withdrawCoin;
+            container1.innerHTML += '<a href="#r" id="fastWithdrawal1" data-coin="" data-amount="" data-method=""> Withdraw</a>';
+            document.querySelector('#fastWithdrawal1').onclick = function () {
+                let coin = this.getAttribute('data-coin');
+                let amount = this.getAttribute('data-amount');
+                let method = this.getAttribute('data-method');
+                withdrawCoin(coin, amount, method);
+            };;
             if(/exchange/ig.test(window.location.href)){
                 let p_withdraw = document.createElement("p")
                 container2.parentNode.appendChild(p_withdraw);
-                p_withdraw.innerHTML += '<a href="#fastWithdrawal2" id="fastWithdrawal2"> Withdraw</a>';
-                document.querySelector('#fastWithdrawal2').onclick = withdrawCoin;
+                p_withdraw.innerHTML += '<a href="#r" id="fastWithdrawal2" data-coin="" data-amount="" data-method=""> Withdraw</a>';
+                document.querySelector('#fastWithdrawal2').onclick =function () {
+                    let coin = this.getAttribute('data-coin');
+                    let amount = this.getAttribute('data-amount');
+                    let method = this.getAttribute('data-method');
+                    withdrawCoin(coin, amount, method);
+                };;
             };
             return;
         } else {
@@ -90,29 +101,30 @@
     //     return captcha.element.getAttribute('data-hcaptcha-response');
     // }
 
-    async function withdrawCoin() {
+    async function withdrawCoin(coin="",amount="",method="") {
         DEBUG&&console.log('@withdrawCoin');
         function get_coin_amount(element){
             let r = document.querySelector(element)&&document.querySelector(element).innerText.split('\n')[1].split(' ');
             let p=document.querySelector("#fastWithdrawal2")
-            let coin=r[1]
-            let amount =r[0]
-            DEBUG&&console.log('coin '+coin,'amount '+amount)
-            p.innerText=`${p.innerText.replace(/-.*/,'')}-(Coin=[${coin}]- Amount=[${amount}])`
-            easyWithdrawal(coin,amount);
+            if(coin){coin=coin}else{coin=r[1]}
+            if(amount){amount=amount}else{amount=r[0]}
+            if(method){method=method}else{method = "faucetpay"}
+            DEBUG&&console.log(`method ${method}, coin ${coin}, amount ${amount}`)
+            p.innerText=`${p.innerText.replace(/-.*/,'')}-(Method=[${method}]- Coin=[${coin}]- Amount=[${amount}])`
+            easyWithdrawal(coin,amount,method);
         }
         //waitForKeyElements('#balance_to_receive',get_coin_amount,true,500)
         get_coin_amount('#balance_to_receive')
     }
 
-    async function easyWithdrawal(coin, amount) {
-        DEBUG&&console.log('@easyWithdrawal', coin, amount);
+    async function easyWithdrawal(coin, amount,method) {
+        DEBUG&&console.log('@easyWithdrawal', coin, amount,method);
 
         try{
             axios.post('withdraw.php',{
                 coin: coin,
                 withdrawal_amount: amount, // coin amount, need to convert in sat in some cases
-                method: `faucetpay_w_${coin}`,
+                method: `${method}_w_${coin}`, // `chain/faucetpay`
                 token: await recaptchaSolution()
                 // token: await hcaptchaSolution()
             })
