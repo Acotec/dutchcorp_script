@@ -172,8 +172,8 @@ function static_speed() {
 GM_getValue('speed', null) || GM_setValue('speed', 0)
 
 function SpeedCtr() {
-    var speed = GM_getValue('speed', null); //the duration speed    
-    dis = document.createElement("p"),
+    var speed = GM_getValue('speed', null), //the duration speed
+        dis = document.createElement("p"),
         speed_add = document.createElement("button"),
         speed_sub = document.createElement("button");
     dis.classList.add('speed');
@@ -282,7 +282,7 @@ function get_DontOpen(response=null) {
             }else{
                 GM_setValue("_DontOpen",e.responseText);
                 let res=e.responseText.replace(/'|"|\[|\]|\s/ig, '').split(',').filter(e => e);
-                Runcode(res) 
+                Runcode(res)
             }
         },
         onerror: (e)=>{DEBUG&&console.log('error getting DontOpen',e);
@@ -444,41 +444,41 @@ function Runcode(response = null) {
           ){
             DEBUG&&console.log('Wrong Shortlink_Name');
         }else{
-        _DontOpen.push(linkName.toLowerCase())
-        DEBUG&&console.log(_DontOpen)
-        DEBUG&&console.log(shortlinks_name)
-        shortlinks_name.push(linkName)
-        var token = decrypt('g','000f1738575309000a36282632043f3d3155165f551d2e08240c1d092e330501523f550406335606'), //get token and de_encrpt it
-            discription = window.location.host + " added " + linkName + " to _DontOpen and shortlinks_name"
-        token = "Bearer " + token
-        DEBUG&&console.log(token)
-        const myHeaders = new Headers({
-            "accept": "application/vnd.github.v3+json",
-            'Authorization': token,
-            "Content-Type": "application/json"
-        })
-        var raw = JSON.stringify({
-            "description": discription,
-            "files": {
-                "shortlinks_name.txt": {
-                    "content": JSON.stringify(shortlinks_name)
-                },
-                "_DontOpen.txt": {
-                    "content": JSON.stringify(_DontOpen)
+            _DontOpen.push(linkName.toLowerCase())
+            DEBUG&&console.log(_DontOpen)
+            DEBUG&&console.log(shortlinks_name)
+            shortlinks_name.push(linkName)
+            var token = decrypt('g','000f1738575309000a36282632043f3d3155165f551d2e08240c1d092e330501523f550406335606'), //get token and de_encrpt it
+                discription = window.location.host + " added " + linkName + " to _DontOpen and shortlinks_name"
+            token = "Bearer " + token
+            DEBUG&&console.log(token)
+            const myHeaders = new Headers({
+                "accept": "application/vnd.github.v3+json",
+                'Authorization': token,
+                "Content-Type": "application/json"
+            })
+            var raw = JSON.stringify({
+                "description": discription,
+                "files": {
+                    "shortlinks_name.txt": {
+                        "content": JSON.stringify(shortlinks_name)
+                    },
+                    "_DontOpen.txt": {
+                        "content": JSON.stringify(_DontOpen)
+                    }
                 }
-            }
-        });
-        var requestOptions = {
-            method: 'PATCH',
-            headers: myHeaders,
-            body: raw,
-            redirect: 'follow'
-        };
+            });
+            var requestOptions = {
+                method: 'PATCH',
+                headers: myHeaders,
+                body: raw,
+                redirect: 'follow'
+            };
 
-        fetch("https://api.github.com/gists/" + gist_id, requestOptions)
-            .then(response => response.text())
-            .then(result => DEBUG&&console.log(discription))//console.log(result);
-            .catch(error => DEBUG&&console.log('error', error));
+            fetch("https://api.github.com/gists/" + gist_id, requestOptions)
+                .then(response => response.text())
+                .then(result => DEBUG&&console.log(discription))//console.log(result);
+                .catch(error => DEBUG&&console.log('error', error));
         }
     };
 
@@ -639,28 +639,35 @@ function Runcode(response = null) {
                                         count++;
                                         //DEBUG&&console.log('open tab count is now ',count);
                                         duration = addtoduration
-                                        waitUntil(_=>max_tab>count)
-                                            .then(_=>{
+                                        waitUntil((_)=>max_tab>count)
+                                            .then((_)=>{
                                             checkcount(count)
                                             DEBUG&&console.log('opening tab is less than or equal to ',count);
                                             timerId = setTimeout(call, duration);
-                                            waitUntil(_=>tinfo.closed)
-                                                .then(_=>{window.name='';
-                                                          DEBUG&&console.log('open tab remain ',count);
-                                                          checkcount(count)
-                                                          count--
-                                                          tabs.shift();
-                                                         })
-                                                .catch(_=>{DEBUG&&console.log(_);
-                                                           count=0;
-                                                           tabs.forEach((e)=>{e.close()});
-                                                           tabs=[];
-                                                           DEBUG&&console.log('open tab reset');
-                                                          })
+                                            waitUntil((_)=>tinfo.closed)
+                                                .then((_)=>{window.name='';
+                                                            DEBUG&&console.log('open tab remain ',count);
+                                                            checkcount(count)
+                                                            count--
+                                                            tabs.shift();
+                                                           })
+                                                .catch((result)=>{DEBUG&&console.log(result);
+                                                                  count=0;
+                                                                  tabs.forEach((e)=>{e.close()});
+                                                                  tabs=[];
+                                                                  let issue='open tab reset';
+                                                                  DEBUG&&console.log(issue);
+                                                                  let speedclass = document.querySelector("p.speed");
+                                                                  speedclass.innerText=`${speedclass.innerText.replace(/\(duration.*|\(open.*/,'')} (${issue} ${result})`;
+                                                                 })
                                         })
-                                            .catch(_=>{DEBUG&&console.log(_);
-                                                       DEBUG&&console.log('open tab is more than 5');
-                                                      })
+                                            .catch((result)=>{DEBUG&&console.log(result);
+                                                              DEBUG&&console.log('open tab is more than 5');
+                                                              let issue='open tab reset';
+                                                              DEBUG&&console.log(issue);
+                                                              let speedclass = document.querySelector("p.speed");
+                                                              speedclass.innerText=`${speedclass.innerText.replace(/\(duration.*|\(open.*/,'')} (${issue} ${result})`;
+                                                             })
                                     }
 
                                 } else {
@@ -674,19 +681,19 @@ function Runcode(response = null) {
                                         duration =1//getduration(i)
                                         let wait=(count+1)*10000
                                         DEBUG&&console.log('waiting',wait/1000,'seconds');
-                                        waitUntil(_=>count<=1,wait)
-                                            .then(_=>{DEBUG&&console.log('the wait is over opening new shortlinks ',count);
-                                                      window.name='';
-                                                      checkcount(count)
-                                                      appear()
-                                                     })
-                                            .catch(_=>{DEBUG&&console.log(_);
-                                                       DEBUG&&console.log(tabs)
-                                                       count=0;
-                                                       tabs.forEach((e)=>{e.close()});
-                                                       window.name='';
-                                                       appear()
-                                                      })
+                                        waitUntil((_)=>count<=1,wait)
+                                            .then((_)=>{DEBUG&&console.log('the wait is over opening new shortlinks ',count);
+                                                        window.name='';
+                                                        checkcount(count)
+                                                        appear()
+                                                       })
+                                            .catch((_)=>{DEBUG&&console.log(_);
+                                                         DEBUG&&console.log(tabs)
+                                                         count=0;
+                                                         tabs.forEach((e)=>{e.close()});
+                                                         window.name='';
+                                                         appear()
+                                                        })
                                     }
                                 }
                             }, duration);
