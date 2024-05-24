@@ -51,9 +51,18 @@
             };;
             if(/exchange/ig.test(window.location.href)){
                 let p_withdraw = document.createElement("p")
+                let p1_withdraw = document.createElement("p")
                 container2.parentNode.appendChild(p_withdraw);
+                container2.parentNode.appendChild(p1_withdraw);
                 p_withdraw.innerHTML += '<a href="#r" id="fastWithdrawal2" data-coin="" data-amount="" data-method=""> Withdraw</a>';
-                document.querySelector('#fastWithdrawal2').onclick =function () {
+                p1_withdraw.innerHTML += '<a href="#r" id="fastWithdrawal3" data-coin="USDT" data-amount="" data-method="chain_w1_USDT"> WithdrawChain</a>';
+                document.querySelector('#fastWithdrawal2').onclick = function () {
+                    let coin = this.getAttribute('data-coin');
+                    let amount = this.getAttribute('data-amount');
+                    let method = this.getAttribute('data-method');
+                    withdrawCoin(coin, amount, method);
+                };
+                document.querySelector('#fastWithdrawal3').onclick = function () {
                     let coin = this.getAttribute('data-coin');
                     let amount = this.getAttribute('data-amount');
                     let method = this.getAttribute('data-method');
@@ -108,7 +117,7 @@
             let p=document.querySelector("#fastWithdrawal2")
             if(coin){coin=coin}else{coin=r[1]}
             if(amount){amount=amount}else{amount=r[0]}
-            if(method){method=method}else{method = "faucetpay"}
+            if(method){method=method}else{method = "faucetpay_w_USDT"}
             DEBUG&&console.log(`method ${method}, coin ${coin}, amount ${amount}`)
             p.innerText=`${p.innerText.replace(/-.*/,'')}-(Method=[${method}]- Coin=[${coin}]- Amount=[${amount}])`
             easyWithdrawal(coin,amount,method);
@@ -124,7 +133,7 @@
             axios.post('withdraw.php',{
                 coin: coin,
                 withdrawal_amount: amount, // coin amount, need to convert in sat in some cases
-                method: `${method}_w_${coin}`, // `chain/faucetpay`
+                method: method, // `chain/faucetpay`
                 token: await recaptchaSolution()
                 // token: await hcaptchaSolution()
             })
