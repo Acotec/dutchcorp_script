@@ -114,16 +114,16 @@
         DEBUG&&console.log('@withdrawCoin');
         function get_coin_amount(element){
             let r = document.querySelector(element)&&document.querySelector(element).innerText.split('\n')[1].split(' ');
-            let p=document.querySelector("#fastWithdrawal2")
-            if(coin){coin=coin}else{coin=r[1]}
-            if(amount){amount=amount}else{amount=r[0]}
-            if(method){method=method}else{method = "faucetpay_w_USDT"}
-            DEBUG&&console.log(`method ${method}, coin ${coin}, amount ${amount}`)
-            p.innerText=`${p.innerText.replace(/-.*/,'')}-(Method=[${method}]- Coin=[${coin}]- Amount=[${amount}])`
+            let p=document.querySelector("#fastWithdrawal2");
+            if(coin){coin=coin}else{coin=r[1]};
+            if(amount){amount=amount}else{amount=r[0]};
+            if(method){method=method}else{method = `faucetpay_w_${coin}`};
+            DEBUG&&console.log(`method ${method}, coin ${coin}, amount ${amount}`);
+            p.innerText=`${p.innerText.replace(/-.*/,'')}-(Method=[${method}]- Coin=[${coin}]- Amount=[${amount}])`;
             easyWithdrawal(coin,amount,method);
         }
         //waitForKeyElements('#balance_to_receive',get_coin_amount,true,500)
-        get_coin_amount('#balance_to_receive')
+        get_coin_amount('#balance_to_receive');
     }
 
     async function easyWithdrawal(coin, amount,method) {
