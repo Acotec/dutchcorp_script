@@ -13,6 +13,27 @@
 
     // Instance A code:
     var key ='c-i'
+    function qSelector(selector) {
+        return document.querySelector(selector);
+    }
+    const RECAPTCHA_STATUS = "#recaptcha-accessible-status";
+    var recaptchaInitialStatus = qSelector(RECAPTCHA_STATUS) ? qSelector(RECAPTCHA_STATUS).innerText : ""
+    function updateReCaptchaLabel(){
+        function checkboxLabel(text) {
+            let label = qSelector("#recaptcha-anchor-label")
+            if (label) {
+                label.textContent=text
+            }
+        }
+        if (qSelector(RECAPTCHA_STATUS) && (qSelector(RECAPTCHA_STATUS).innerText != recaptchaInitialStatus)) {
+            //console.log("SOLVED");
+            checkboxLabel("SOLVED")
+        }else{
+            //console.log(recaptchaInitialStatus);
+        }
+    }
+
+    setInterval(updateReCaptchaLabel,0);
     if (!/recaptcha\/api2\/anchor/gi.test(location.href)) {
         // Start listening for keypress events
         VM.shortcut.register(key, () => {GM_setValue('shortcut_triggered', Date.now());/* c-i pressed */});
