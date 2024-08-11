@@ -1,3 +1,23 @@
+// ==UserScript==
+// @name         DutchyCorp(FastWithdrawn)
+// @namespace    http://tampermonkey.net/
+// @description   withdraw
+// @version       0.2
+// @author        Acotec
+// @updateURL    https://github.com/Acotec/dutchycorp_meta/raw/root/DutchyCorp(FastWithdrawn).user.js
+//// @downloadURL  https://github.com/Acotec/dutchycorp_meta/raw/root/DutchyCorp(FastWithdrawn).user.js
+//// @require      https://github.com/Acotec/dutchycorp_script/raw/root/DutchyCorp(FastWithdrawn).user.js
+// @match        https://autofaucet.dutchycorp.space/exchange.php*
+// @match        https://autofaucet.dutchycorp.space/your_balance.php*
+// @connect      autofaucet.dutchycorp.space
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=dutchycorp.space
+// @require      https://greasyfork.org/scripts/461948-fbase-lib/code/FBase%20Lib.js?version=1224586
+// @grant        GM_xmlhttpRequest
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @grant        GM_deleteValue
+// ==/UserScript==
+
 (function() {
     'use strict';
     var DEBUG =false
@@ -103,12 +123,33 @@
             return await recaptchaSolutionv3()
         }
     }
-    // async function hcaptchaSolution() {
-    //     let captcha = new HCaptchaWidget();
-    //     await captcha.isSolved();
-    //     DEBUG&&console.log(captcha.element.getAttribute('data-hcaptcha-response'));
-    //     return captcha.element.getAttribute('data-hcaptcha-response');
-    // }
+    async function hcaptchaSolution() {
+        let captcha = new HCaptchaWidget();
+        await captcha.isSolved();
+        DEBUG&&console.log(captcha.element.getAttribute('data-hcaptcha-response'));
+        return captcha.element.getAttribute('data-hcaptcha-response');
+    }
+
+    async function iconcaptchaSolution() {
+        var ic_id =document.getElementsByName('ic-hf-id')[0].value;
+        var ic_se =document.getElementsByName('ic-hf-se')[0].value;
+        if (ic_id.length > 0 || ic_se.length > 0) {
+            replace_par('Processing Withdraw')
+            var jsonData = {
+                "_iconcaptcha-token": document.getElementsByName('_iconcaptcha-token')[0].value,
+                "ic-hf-se": document.getElementsByName('ic-hf-se')[0].value,
+                "ic-hf-id": document.getElementsByName('ic-hf-id')[0].value,
+                "ic-hf-hp": document.getElementsByName('ic-hf-hp')[0].value
+            };
+            var ic_token=jsonData
+            return ic_token;
+        } else {
+            DEBUG&&console.log('waiting for icon_captcha');
+            replace_par('waiting for icon_captcha')
+            await wait(1000);
+            return iconcaptchaSolution();
+        }
+    };
 
     async function withdrawCoin(coin="",amount="",method="") {
         DEBUG&&console.log('@withdrawCoin');
@@ -128,14 +169,47 @@
 
     async function easyWithdrawal(coin, amount,method) {
         DEBUG&&console.log('@easyWithdrawal', coin, amount,method);
+        function detectCaptchaType() {
+            // Check for reCAPTCHA
+            if (document.querySelector('div[data-sitekey], iframe[src*="google.com/recaptcha/api.js"]')) {
+                return 'reCAPTCHA';
+            }
+
+            // Check for IconCaptcha v3 and earlier
+            if (document.querySelector('.iconcaptcha-container')||document.querySelector('.iconcaptcha-modal__body')) {
+                return 'IconCaptcha';
+            }
+
+            // Check for hCaptcha
+            if (document.querySelector('.hcaptcha-container, iframe[src*="hcaptcha.com/1/api.js"]')) {
+                return 'hCaptcha';
+            }
+
+            // If none of the above, return 'Unknown'
+            return 'Unknown';
+        };
+        async function getCaptchaSolution() {
+            const captchaType =await detectCaptchaType();
+            console.log('Captcha type:', captchaType);
+            switch (captchaType) {
+                case 'reCAPTCHA':
+                    return await recaptchaSolution();
+                case 'hCaptcha':
+                    return await hcaptchaSolution();
+                case 'IconCaptcha':
+                case 'IconCaptcha v4':
+                    return await iconcaptchaSolution();
+                default:
+                    throw new Error('Unsupported captcha type');
+            }
+        }
 
         try{
             axios.post('withdraw.php',{
                 coin: coin,
                 withdrawal_amount: amount, // coin amount, need to convert in sat in some cases
                 method: method, // `chain/faucetpay`
-                token: await recaptchaSolution()
-                // token: await hcaptchaSolution()
+                token: await getCaptchaSolution()
             })
                 .then( function(response){
                 DEBUG&&console.log(response.status);
