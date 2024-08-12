@@ -1,64 +1,52 @@
-if(/.*dutchycorp.space\/defi.*|anchoreth/ig.test(window.location.href)){window.close()}
-//Press P on the keybboard to remove the added title
-let addedtitle=" (Page Loaded)"
-const title = ()=>{
-    if(new RegExp('faucetpay.io','ig').test(window.location.href)){remove();document.title=document.title.replace(/\|.*/,addedtitle)}
-    else if(new RegExp('autofaucet.dutchycorp','ig').test(window.location.href)){remove();document.title=document.title+addedtitle}
-    else{
-        clearInterval(checkPageLoadInterval);
-    }
+// Close the window if the URL matches certain patterns
+if (/.*dutchycorp\.space\/defi.*|anchoreth/i.test(window.location.href)) {
+    window.close();
 }
-let remove=()=>{
+
+// Define the added title
+const addedTitle = ' (Page Loaded)';
+
+// Define the title function
+const title = () => {
+    // Check if the URL matches certain patterns
+    if (/faucetpay\.io/ig.test(window.location.href)) {
+        remove();
+        document.title = document.title.replace(`${addedTitle}.*}`,'')+addedTitle;
+    } else if (/autofaucet\.dutchycorp/ig.test(window.location.href)) {
+        remove();
+        // Define the added title
+        document.title = document.title.replace(`${addedTitle}.*}`,'')+addedTitle;
+    } else {
+        cancelTitleUpdate();
+    }
+};
+
+// Define the remove function
+const remove = () => {
+    // Listen for the 'P' key press
     window.addEventListener('keydown', function check(event) {
         if (event.key.toLowerCase() === 'p') {
-            clearInterval(checkPageLoadInterval);
-            document.title = document.title.replace(addedtitle,'');
-            this.removeEventListener('keydown',check,false);
+            cancelTitleUpdate();
+            document.title = document.title.replace(addedTitle, '');
+            this.removeEventListener('keydown', check, false);
         }
-    });
+    }, { once: true });
 };
-//window.addEventListener('load', show, false);
-var checkPageLoadInterval;
-function checkPageLoad() {
-    // Check if the text has already been added to the title
-    if (document.title.endsWith(" (Page Loaded)")) {
-        //clearInterval(checkPageLoadInterval);
-        return;
-    }
 
-    // Check if the page has finished loading
-    if (document.readyState === 'complete') {
-        // Add text to page title
-        title();
-
-        // Stop checking for page load
-        clearInterval(checkPageLoadInterval);
-    }
-}
+// Define the cancelTitleUpdate function
+let titleUpdateInterval;
+const cancelTitleUpdate = () => {
+    clearInterval(titleUpdateInterval);
+};
 
 // Wait for the page to fully load
-window.onload =()=>{
+window.onload = () => {
     // Check if the text has already been added to the title
-    if (!(new RegExp(addedtitle,'ig').test(document.title))) {
+    if (!(new RegExp(addedTitle, 'i').test(document.title))) {
         // Add text to page title
         title();
     }
-
-    // Check for page load every 500 milliseconds
-    checkPageLoadInterval = setInterval(checkPageLoad, 500);
-
-    // Listen for URL changes
-    window.addEventListener('urlchange', function() {
-        // Reset the interval check
-        clearInterval(checkPageLoadInterval);
-
-        // Check if the text has already been added to the title
-        if (!(new RegExp(addedtitle,'ig').test(document.title))){
-            // Add text to page title
-            title();
-        }
-
-        // Check for page load every 500 milliseconds
-        checkPageLoadInterval = setInterval(checkPageLoad, 500);
-    });
+    if (/roll/ig.test(window.location.href)) {
+        titleUpdateInterval = setInterval(title, 1000)
+    }
 };
