@@ -672,7 +672,9 @@
 
                 const wait = t => new Promise((resolve, reject) => setTimeout(resolve, t))
                 const redirect = async () => {
-                  await wait(randomInteger(10,20)*1000)
+                  const time=randomInteger(10,20)  
+                  document.title=`${document.title} ${time}`
+                  await wait(time*1000)
                   window.location.href = originalurl;
                 }
                 redirect()
