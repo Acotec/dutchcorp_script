@@ -667,7 +667,15 @@
                 sessionStorage.removeItem('tryagain');
                 const originalurl = new URL(data.result);
                 DEBUG && console.log(originalurl);
-                window.location.href = originalurl;
+                function randomInteger(min, max) {
+                  return Math.floor(Math.random() * (max - min + 1)) + min;}
+
+                const wait = t => new Promise((resolve, reject) => setTimeout(resolve, t))
+                const redirect = async () => {
+                  await wait(randomInteger(10,20)*1000)
+                  window.location.href = originalurl;
+                }
+                redirect()
                 //console.log(originalurl)
                 //alert(originalurl)
                 return
