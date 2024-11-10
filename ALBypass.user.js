@@ -2,9 +2,19 @@
     const CLOSEWIN =true;
     const RELOADWIN =true;
     const DEBUG =false;
+    const startTime=3;
+    const startTimeEnd=5
     if (window.history.replaceState) {
         window.history.replaceState(null, null, decodeURIComponent(window.location.href));
     } //to prevent resubmit on refresh and back button
+
+    //to prevent multiple page with thesame url
+    // window.addEventListener('storage', () => {
+    //     window.close();
+    // }, false)
+
+    // localStorage.setItem('Sentinel',Math.random())
+
     //---------------------------------------------------------//
     var messageError,
         linkCantBypass,
@@ -17,8 +27,166 @@
         green_icon1 = GM_getValue("green_icon1", ""),
         grey_icon = GM_getValue("grey_icon", ""),
         red_icon = GM_getValue("red_icon", ""),
-        dutchy = "autofaucet.dutchycorp.space",
         gist_id = "493dc66ecebd58a75b730a77ef676632";
+
+
+    var dutchy = `autofaucet.dutchycorp.space|free-bonk.com|earnbitmoon.club|banfaucet.com|cashbux.work|criptolia.site|tronpayz.com|bitsbon.com|viefaucet.com|cryptoclaimhub.com|bitbitz.cc`
+
+    // Configuration for different shortlink sites
+     var websiteConfigs = {
+         'tronpayz.com/links': {
+             linkSelector: '.col-lg-3 .btn-primary',
+             closeSelector: '.card-body',
+             titleSelector: '.card-title',
+             claimBadgeSelector: '.badge-soft-info',
+             claimButtonSelector: '.btn-primary'
+         },
+         "faucet-bit.com": {
+             "linkSelector": "a[href^='https://faucet-bit.com/links/go/']",
+             "closeSelector": ".card.card-body",
+             "titleSelector": ".card-title",
+             "claimBadgeSelector": ".badge.badge-info",
+             "claimButtonSelector": ".btn.btn-primary",
+         },
+         'criptolia.site/links': {
+             linkSelector: '.col-lg-3 .btn-primary',
+             closeSelector: '.card-body',
+             titleSelector: '.card-title',
+             claimBadgeSelector: '.badge-soft-info',
+             claimButtonSelector: '.btn-primary'
+         },
+
+         "litefaucet.in/links":{
+             linkSelector: '.col-lg-3 .btn-primary',
+             closeSelector: '.card-body',
+             titleSelector: '.card-title',
+             claimBadgeSelector: '.badge',
+             claimButtonSelector: '.btn-primary'
+         },
+         "routinefaucet.net/shortlinks": {
+             linkSelector: 'button[onclick^="goShortlink"]',
+             closeSelector: 'tr',
+             titleSelector: 'td a',
+             claimBadgeSelector: '[class*="align-middle"]:nth-of-type(3)',
+             claimButtonSelector: 'button[onclick^="goShortlink"]',
+             runOnce:true
+         },
+         "earnbitmoon.club/shortlinks": {
+             linkSelector: 'button[onclick^="goShortlink"]',
+             closeSelector: 'tr',
+             titleSelector: '.align-middle',
+             claimBadgeSelector: '[class*="align-middle"]:nth-of-type(3)',
+             claimButtonSelector: 'button[onclick^="goShortlink"]',
+             runOnce:true
+         },
+         'coinfaucet.store/links': {
+             linkSelector: '.col-lg-3 .btn-primary', // Selects the claim button/link
+             closeSelector: '.card-body', // Selects the container
+             titleSelector: '.card-title', // Selects the title
+             claimBadgeSelector: '.badge-info', // Selects the badge showing "5/5"
+             claimButtonSelector: '.btn-primary' // Selects the "Claim" button
+         },
+         "fundsreward.com": {
+             "linkSelector": "a[href^='https://fundsreward.com/links/pre_verify/']",
+             "closeSelector": ".card.card-body",
+             "titleSelector": ".card-title",
+             "claimBadgeSelector": ".badge.badge-info",
+             "claimButtonSelector": ".btn.btn-primary"
+         },
+         'claimcoin.in/links': {
+             linkSelector: "a[href^='https://claimcoin.in/links/go/']",
+             closeSelector: ".card.card-body",
+             titleSelector: ".card-title",
+             claimBadgeSelector: ".badge.badge-info",
+             claimButtonSelector: ".btn.btn-success",
+         },
+         "viefaucet.com": {
+             linkSelector: ".el-card__body ",
+             closeSelector: ".el-card__body",
+             titleSelector: ".link-name",
+             claimBadgeSelector: ".el-tag__content",
+             claimButtonSelector: '.el-button--success'
+         },
+         'cryptoclaimhub.com/shortlinks': {
+             linkSelector: ".card-body a.btn-primary",
+             closeSelector: ".card-body",
+             titleSelector: ".mb-2 strong",
+             claimBadgeSelector: ".fs-5",
+             claimButtonSelector: ".btn-primary"
+         },
+         "bitbitz.cc/shortlinks": {
+             linkSelector: ".bitcard-body",
+             closeSelector: ".mt-4",
+             titleSelector: ".fw-bold",
+             claimBadgeSelector: ".float-end",
+             claimButtonSelector: '.shortlink-card',
+             split:' '
+         },
+         'cashbux.work/links': {
+             linkSelector: '.card-body a.btn-primary',
+             closeSelector: '.card-body',
+             titleSelector: '.card-title',
+             claimBadgeSelector: '.badge-info',
+             claimButtonSelector: '.btn-primary'
+         },
+         'banfaucet.com/links': {
+             linkSelector: '.card-lg .btn-one',
+             closeSelector: '.card-lg',
+             titleSelector: '.title',
+             claimBadgeSelector: '.pill.yellow',
+             claimButtonSelector: '.btn-one'
+         },
+         "autofaucet.dutchycorp.space": {
+             linkSelector: '.gradient-btn.btn.btn-small',
+             closeSelector: '.card.hoverable',
+             titleSelector: '.hoverable p',
+             claimBadgeSelector: '.fa-eye + b',
+             claimButtonSelector: 'a[data-tooltip="Visit Shortlink"]'
+         }
+     };
+    // Function to update dutchy list with new domains
+    function updateDutchyList(dutchy, websiteConfigs) {
+        // Convert dutchy string to array
+        let dutchyArray = dutchy.split('|');
+
+        // Get domains from websiteConfigs keys and clean them
+        const shortlinkDomains = Object.keys(websiteConfigs).map(key => {
+            // Remove '/links' or '/shortlinks' and any escape characters
+            return key//.replace(/\/links$|\/shortlinks$|\\/g, '');
+        });
+
+        // Add new domains that aren't in dutchy
+        shortlinkDomains.forEach(domain => {
+            if (!dutchyArray.includes(domain.replace(/\/links$|\/shortlinks$|\\/g, ''))) {
+                dutchyArray.push(domain);
+            }
+        });
+
+        // Convert back to pipe-separated string
+        return dutchyArray.join('|');
+    }
+
+    // Update the dutchy list
+    dutchy= updateDutchyList(dutchy, websiteConfigs);
+    console.log('Updated dutchy list:',dutchy);
+
+    if (!new RegExp(dutchy,'gi').test(window.location.href)
+       ){
+        window.addEventListener('storage', () => {
+            // Close this tab if it doesn't match our domain
+            if (!new RegExp(dutchy,'gi').test(window.location.href)
+               ) {
+                //window.close();
+            }
+        }, false);
+
+        // Trigger storage event every second
+
+        setTimeout(() => {
+            localStorage.setItem('closeOthers', Date.now());
+        }, Math.floor(Math.random() * 5000) + 1000);
+        //return
+    }
 
     String.prototype.insert = function (index, string) {
         if (index > 0) {
@@ -115,6 +283,7 @@
         if (typeof inputWord !== "string" || !Array.isArray(knownWords)) {
             throw new Error("Invalid input");
         }
+        //console.log(knownWords)
 
         // Convert the input word to lowercase and get its bigrams
         const inputWordBigrams = getBigrams(inputWord.toLowerCase());
@@ -124,6 +293,8 @@
         let mostSimilarWord = inputWord;
         for (const knownWord of knownWords) {
             // Get the bigrams of the known word and calculate the similarity score
+            //console.log(knownWord)
+
             const knownWordBigrams = getBigrams(knownWord.toLowerCase());
             const similarity = calculateSimilarity(
                 inputWordBigrams,
@@ -159,6 +330,7 @@
             );
         }
         // Return the most similar word
+        //console.log(mostSimilarWord)
         return mostSimilarWord;
     }
 
@@ -278,7 +450,7 @@
             .map((charCode) => String.fromCharCode(charCode))
             .join("");
     };
-    function updateDontOpen(linkName=window.name, check = [], message = messageError) {
+    async function updateDontOpen(linkName=window.name, check = [], message = messageError) {
         // Constants for gist URL and access token
         const GIST_URL = `https://gist.github.com/Harfho/${gist_id}/raw/_DontOpen.txt?timestamp=${+new Date()}`;
         const TOKEN = decrypt('g','000f1738575309000a36282632043f3d3155165f551d2e08240c1d092e330501523f550406335606')
@@ -309,6 +481,7 @@
             .map((item) => item.replace(/'/gi, '"').toLowerCase());
 
             DEBUG && console.log(dontOpenList, linkName);
+            GM_setValue("_DontOpen", response.responseText);
             // If linkName is not already in _DontOpen list, update it
             if (!(dontOpenList.indexOf(linkName.toLowerCase())>=0)&& linkName){
                 const updatedDontOpenList = [...dontOpenList, linkName.toLowerCase()]; // Use spread syntax to create new array with added linkName
@@ -393,100 +566,90 @@
     }
 
     async function getDomainOrPathNameAndUpdate(
-    link = window.name||sessionStorage.getItem("shortner_name"),
+    link = window.name || sessionStorage.getItem("shortner_name"),
      toupdate = "unsupported url",
      message = messageError
     ) {
-        const GIST_URL = `https://gist.github.com/Harfho/${gist_id}/raw/shortlinks_name.txt?timestamp=${+new Date()}`;
+        const GIST_URL = `https://gist.github.com/Harfho/${gist_id}/raw/_DontOpen.txt?timestamp=${Date.now()}`;
 
-        await GM_xmlhttpRequest({
-            method: "GET",
-            url: "https://gist.github.com/Harfho/" +
-            gist_id +
-            "/raw/shortlinks_name.txt?timestamp=" +
-            +new Date(),
-            revalidate: false,
-            nocache: true,
-            onload: getShortlinksName,
-            onerror: (r) => {
-                getDomainOrPathNameAndUpdate(link,toupdate,message);
-                return
-                RELOADWIN && window.location.reload(true)
-                //messageError = `${messageError}-(${toupdate}) or shortlink url was changed;`;
-                //updateDontOpen(link, [], message);
-            },
-            onabort: (r) => {
-                getDomainOrPathNameAndUpdate(link,toupdate,message);
-                return
+        try {
+            const response = await fetchWithRetry(GIST_URL);
+            await processShortlinksName(response);
+        } catch (error) {
+            console.error("Error fetching data:", error);
+            // if (RELOADWIN) window.location.reload(true);
+        }
+
+        async function fetchWithRetry(url, retries = 3) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    return await new Promise((resolve, reject) => {
+                        GM_xmlhttpRequest({
+                            method: "GET",
+                            url,
+                            revalidate: false,
+                            nocache: true,
+                            onload: resolve,
+                            onerror: reject,
+                            onabort: reject
+                        });
+                    });
+                } catch (error) {
+                    if (i === retries - 1) throw error;
+                }
             }
-        });
+        }
 
-        function getShortlinksName(response) {
-            const shortlinksName = response.responseText
-            .replace(/'|"|\[|\]|\s/gi, "")
-            .split(",")
-            .filter(Boolean)
-            .map((s) => s.toLowerCase())
-            .sort();
+        function processShortlinksName(response) {
+            const shortlinksName = parseShortlinksName(response.responseText);
             const url = decodeURIComponent(window.location.href).toLowerCase().replace(/.*bypass=|\/==.*/, '');
-            const pattern = /.+(\.|\|)|\(page.*|\s/gi
-            const pageTitle = document.title
-            .toLowerCase()
-            .replace(pattern,'')
-            .trim();
+            const pageTitle = document.title.toLowerCase().replace(/.+(\.|\|)|\(page.*|\s/gi, '').trim();
             const urlSplice = url.split("/").splice(2, 2);
-            urlSplice.push(url.split('.')[1])
-            DEBUG && console.log(urlSplice)
-            const shortnerName = GM_getValue("shortner_name","null")
-            .replace(/\s/g, "")
-            .toLowerCase();
-            const previousShortnerName = GM_getValue(
-                "previous_shortner_name",
-                "null"
-            ).toLowerCase();
-            let ref, exLink, hostname;
-            try {
-                hostname = window.name||sessionStorage.getItem("shortner_name")||new URL(link).host;
-            } catch (error) {
-                hostname = window.name|| sessionStorage.getItem("shortner_name")
-                    .toLowerCase()
-                    .replace(pattern,'')
-                    .trim();
+            urlSplice.push(url.split('.')[1]);
+
+            const exLink = buildExLink(url, pageTitle, urlSplice);
+            DEBUG && console.log(exLink);
+
+            const found = findMatchingShortlinks(exLink, shortlinksName);
+            DEBUG && console.log("found", found);
+
+            const uniqueFound = [...new Set(found)];
+            DEBUG && console.log("uniqueFound", uniqueFound);
+
+            const pathOrDomain = findPathOrDomain(uniqueFound, shortlinksName);
+
+            updateBasedOnResult(pathOrDomain, shortlinksName, toupdate, message, link);
+        }
+
+        function parseShortlinksName(responseText) {
+            return responseText
+                .replace(/'|"|\[|\]|\s/gi, "")
+                .split(",")
+                .filter(Boolean)
+                .map(s => s.toLowerCase())
+                .sort();
+        }
+
+        function buildExLink(url, pageTitle, urlSplice) {
+            const baseExLink = [
+                window.name,
+                sessionStorage.getItem("shortner_name"),
+                pageTitle,
+                urlSplice[0],
+                urlSplice[1],
+                urlSplice[2],
+                new URL(url).host
+            ];
+
+            if (document.referrer && !/.*dutchycorp.*/gi.test(document.referrer)) {
+                baseExLink.push(new URL(document.referrer).host);
             }
 
-            if (
-                document.referrer &&
-                !/.*dutchycorp.*/gi.test(document.referrer)
-            ) {
-                ref = new URL(document.referrer).host;
-                exLink = [
-                    window.name,
-                    sessionStorage.getItem("shortner_name"),
-                    shortnerName,
-                    pageTitle,
-                    urlSplice[0],
-                    urlSplice[1],
-                    urlSplice[2],
-                    hostname,
-                    getSimilarWord(urlSplice[0], shortlinksName),
-                    previousShortnerName,
-                    ref,
-                ];
-            } else {
-                exLink = [
-                    window.name,
-                    sessionStorage.getItem("shortner_name"),
-                    shortnerName,
-                    pageTitle,
-                    urlSplice[0],
-                    urlSplice[2],
-                    hostname,
-                    getSimilarWord(urlSplice[0], shortlinksName),
-                    previousShortnerName,
-                ];
-            }
-            DEBUG && console.log(exLink);
-            const found = exLink.filter((e) => {
+            return baseExLink;
+        }
+
+        function findMatchingShortlinks(exLink, shortlinksName) {
+            return exLink.filter(e => {
                 try {
                     const sr = getSimilarWord(e.toLowerCase(), shortlinksName);
                     DEBUG && console.log(`${e} found to be ${sr}`);
@@ -495,65 +658,46 @@
                     return false;
                 }
             });
-            DEBUG && console.log("found", found);
+        }
 
-            const uniqueFound = [...new Set(found)];
+        function findPathOrDomain(uniqueFound, shortlinksName) {
+            const similarities = uniqueFound.map(item =>
+                                                 getSimilarWord(item.replace(/\./gi, "").toLowerCase(), shortlinksName, Math.random() < 0.7 ? 0.8 : 0.9)
+                                                );
+            console.log(similarities)
+            return similarities.length > 1 ? similarities[0] : null;
+        }
 
-            DEBUG && console.log("uniqueFound", uniqueFound);
+        function updateBasedOnResult(pathOrDomain, shortlinksName, toupdate, message, link) {
+            if (!pathOrDomain) {
+                pathOrDomain = getSimilarWord(link.toLowerCase(), shortlinksName, Math.random() < 0.7 ? 0.8 : 0.9);
 
-            let pathOrDomain = null;
-            let check = [];
-            for (const item of uniqueFound) {
-                const randomThreshold = [0.3, 0.4][
-                    Math.floor(Math.random() * 2)
-                ];
-                const similarity = getSimilarWord(
-                    item.replace(/\./gi, "").toLowerCase(),
-                    shortlinksName,
-                    randomThreshold
-                );
-                check.push(similarity);
-                DEBUG && console.log(item, "similar to", similarity);
             }
-            //check = [...new Set(check)];
-            check = [...new Set(check)];
-            DEBUG && console.log("check", check);
-            if (check.length > 1) {
-                pathOrDomain = check[0];
-                DEBUG && console.log("Final", pathOrDomain, check[0]);
-            };
-            if (pathOrDomain) {
-                if (/(dontopen|down)/i.test(toupdate)) {
-                    pathOrDomain = getSimilarWord(
-                        pathOrDomain,
-                        shortlinksName,
-                        0.4
-                    );
-                    messageError += `(${toupdate})\n`;
-                    updateDontOpen(pathOrDomain, check, message);
-                } else if (
-                    /unsupported url/i.test(toupdate) &&
-                    shortlinksName.includes(pathOrDomain)
-                ) {
-                    messageError += `(${toupdate}) shortlink URL was changed;`;
-                    linkCantBypass = link;
-                    updateDontOpen(pathOrDomain, check, message);
-                }
-            } else {
-                hostname = hostname.toLowerCase();
-                if (/(dontopen|down)/i.test(toupdate)) {
-                    hostname = getSimilarWord(hostname, shortlinksName, 0.4);
-                    messageError += `FROM else (${toupdate})`;
-                    updateDontOpen(hostname, check, message);
-                } else if (
-                    /unsupported url/i.test(toupdate) &&
-                    shortlinksName.includes(hostname)
-                ) {
-                    messageError += `FROM else (${toupdate}) shortlink URL was changed`;
-                    linkCantBypass = link;
-                    updateDontOpen(hostname, check, message);
-                }
+
+            if (/(dontopen|down)/i.test(toupdate)) {
+                messageError += `(${toupdate})\n`;
+            } else if (/unsupported url/i.test(toupdate) && shortlinksName.includes(pathOrDomain)) {
+                messageError += `(${toupdate}) shortlink URL was changed;`;
+                linkCantBypass = link;
             }
+
+            //GM_setValue('_DontOpen',JSON.stringify(GM_getValue('_DontOpen')))
+            console.log(pathOrDomain)
+            var new_li =JSON.parse(GM_getValue('_DontOpen'))
+            //console.log(new_li)
+            
+            updateDontOpen(pathOrDomain, [], message);
+            return
+            
+            if(pathOrDomain && !new_li.includes(pathOrDomain)){
+                new_li.push(pathOrDomain)
+                GM_setValue('_DontOpen',JSON.stringify(new_li))
+                console.log(new_li)
+                CLOSEWIN && window.close()
+                return
+            }
+
+
         }
     }
 
@@ -595,6 +739,7 @@
               sessionStorage.getItem("shortner_name") || (window.name||shortnerName);
 
         // Check if page is reloaded
+
         if (
             window.performance &&
             performance.navigation.type === performance.navigation.TYPE_RELOAD
@@ -610,22 +755,30 @@
         const host = new URL(link).host;
         const shortlinks = [
             window.name,
-            sessionShortnerName,
             shortnerName,
+            sessionShortnerName,
             previousShortnerName,
-        ].map((s) => s.toLowerCase());
-        const closestShortlink = getSimilarWord(window.name||sessionShortnerName, shortlinks, 0.3);
-
+        ].map((s) => {
+            console.log('map',s)
+            if(!/zigi_tag_id/ig.test(s)){
+                return s.toLowerCase()
+            }else{
+                return ''}
+        });
+        console.log(shortlinks)
+        let closestShortlink = getSimilarWord(window.name||shortnerName, shortlinks, 0.3);
+        console.log(closestShortlink)
         // Set document title to the closest shortlink name
-        const useShortlink =
-              host === closestShortlink ?
-              sessionShortnerName || shortnerName :
-        closestShortlink;
+        const useShortlink =closestShortlink
+        //       host === closestShortlink ?
+        //       sessionShortnerName || shortnerName :
+        // closestShortlink;
         sessionStorage.setItem("shortner_name", useShortlink);
         document.title = useShortlink;
         DEBUG && console.log("title use", useShortlink);
         return useShortlink;
     }
+
 
     //bypass the link
     async function bypass(link) { //a function that takes a link as a parameter and returns a promise
@@ -668,16 +821,57 @@
                 const originalurl = new URL(data.result);
                 DEBUG && console.log(originalurl);
                 function randomInteger(min, max) {
-                  return Math.floor(Math.random() * (max - min + 1)) + min;}
+                    return Math.floor(Math.random() * (max - min + 1)) + min;}
+                function randomFloat(min, max) {
+                    // Generate a random float between min and max
+                    return Math.random() * (max - min) + min;
+                }
 
                 const wait = t => new Promise((resolve, reject) => setTimeout(resolve, t))
                 const redirect = async () => {
-                  const time=randomInteger(10,20)  
-                  document.title=`${document.title} ${time}`
-                  await wait(time*1000)
-                  window.location.href = originalurl;
+                    // Create and style the popup
+                    const popup = document.createElement('div');
+                    popup.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 15px 25px;
+        border-radius: 5px;
+        font-family: Arial, sans-serif;
+        z-index: 99999999999;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    `;
+                    document.body.appendChild(popup);
+
+
+                    const timeInMinutes = randomFloat(startTime,startTimeEnd);
+
+                    const timeInSeconds = Math.floor(timeInMinutes * 60);
+                    let remainingSeconds = timeInSeconds;
+                    document.title = `${document.title} ${timeInMinutes.toFixed(1)}`
+
+                    // Update popup every second
+                    const countdownInterval = setInterval(() => {
+                        remainingSeconds--;
+                        // Convert remaining seconds to minutes and seconds
+                        const minutes = Math.floor(remainingSeconds / 60);
+                        const seconds = remainingSeconds % 60;
+                        // Format the display
+                        popup.textContent = `Redirecting in ${minutes}m${seconds}s/${timeInMinutes.toFixed(1)}m`;
+
+                        if (remainingSeconds <= 0) {
+                            clearInterval(countdownInterval);
+                            popup.remove();
+                        }
+                    }, 1000);
+
+                    await wait(timeInSeconds * 1000);
+                    window.location.href = originalurl;
                 }
-                redirect()
+
+                redirect();
                 //console.log(originalurl)
                 //alert(originalurl)
                 return
@@ -862,30 +1056,118 @@
         Bypass,
         "Bypass"
     );
-    //autofaucet.dutcycorp.space
-    if (/.+shortlinks-wall.php(?:.*\?r=.+)?$/gi.test(decodeURIComponent(window.location.href))) {
+
+
+    // Utility Functions
+    function extractLinkName(element, site) {
+        // First try the closest container method
+        const container = element.closest(site.closeSelector);
+        if (container) {
+            // Try all possible title selectors
+            const selectors = Array.isArray(site.titleSelector)
+            ? site.titleSelector
+            : [site.titleSelector];
+
+            for (const selector of selectors) {
+                const nameElement = container.querySelector(selector);
+                if (nameElement && nameElement.innerText) {
+                    const name = nameElement.innerText.trim();
+                    if (name) return name;
+                }
+            }
+        }
+
+        // If no name found, try searching in the entire document
+        const selectors = Array.isArray(site.titleSelector)
+        ? site.titleSelector
+        : [site.titleSelector];
+
+        for (const selector of selectors) {
+            const elements = document.querySelectorAll(selector);
+            for (const element of elements) {
+                if (element && element.innerText) {
+                    const name = element.innerText.trim();
+                    if (name) return name;
+                }
+            }
+        }
+
+        return '';
+    }
+
+    // Handle shortlink sites
+    const getTitle = (linkname) => {
+
+        let title =linkname.trim();
+
+        // Get current URL
+        const currentUrl = window.location.href;
+
+        // Find matching site config
+        const siteConfig = Object.entries(websiteConfigs).find(([urlPattern]) =>
+                                                               currentUrl.includes(urlPattern)
+                                                              );
+
+        // If site config exists and has split defined, use it
+        if (siteConfig && siteConfig[1].split) {
+            const splitChar = siteConfig[1].split;
+            return title.split(splitChar)[0].trim();
+        }
+
+        return title;
+    };
+    function handlewebsiteConfigs(decodedUrl) {
+        for (const [domain, site] of Object.entries(websiteConfigs)) {
+            if (new RegExp(domain, 'ig').test(decodedUrl)) {
+                console.log('LISTEN TO ', site);
+                setupSiteHandlers(site);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function setupSiteHandlers(site) {
         GM_addValueChangeListener(
             "shortner_name",
-            function (name, old_value, new_value, remote) {
+            function(name, old_value, new_value, remote) {
                 GM_setValue("shortner_name", new_value);
                 GM_setValue("previous_shortner_name", old_value);
-                GM_deleteValue('email_sent')
+                GM_deleteValue('email_sent');
             }
         );
-        document.onclick = function (event) {
-            window.name=''
-            if (event === undefined) event = window.event;
-            var target = "target" in event ? event.target : event.srcElement;
-            if (/claim/gi.test(target.textContent)) {
-                let linkName = target.parentElement.parentElement.innerText
-                .replace(/\n.*/g, "")
-                .trim();
-                GM_setValue("shortner_name", window.name||linkName);
-                DEBUG && console.log('N-',linkName);
-            }}; //get shortlink name when click
-        if (GM_getValue('OnPhone', false)){CLOSEWIN && window.close()}
-        return
+
+        document.onclick = function(event) {
+            event = event || window.event;
+            const target = event.target || event.srcElement;
+            //console.log('Target', target);
+
+            // Check if the click target matches any of our criteria
+            const isRelevantClick = target.closest(site.linkSelector) ||
+                  target.closest(site.titleSelector) ||
+                  target.closest(site.claimButtonSelector) ||
+                  target.closest(site.claimBadgeSelector) ||
+                  target.closest(site.closeSelector) ||
+                  /claim|visit/gi.test(target.textContent);
+
+            if (isRelevantClick) {
+                let linkName =getTitle(extractLinkName(target, site));
+                if (linkName) {
+                    // event.preventDefault()
+                    DEBUG && console.log('Final Link Name:', linkName);
+                    GM_setValue("shortner_name", linkName);
+                    DEBUG && console.log(`${window.location.host} - ${linkName}`);
+                } else {
+                    DEBUG && console.log('No link name found');
+                }
+            }
+        };
     }
+
+    // Initialize script with the decoded URL
+    const decodedUrl = decodeURIComponent(window.location.href);
+    handlewebsiteConfigs(decodedUrl);
+
     // Get the current time as a number to compare with the last time the "after24h" value was set
     let t = new Date(Date.parse(new Date().toLocaleString()));
     let to_day = parseInt(
@@ -937,6 +1219,7 @@
         var patt = 'muskfoundation.org'
         var decodeUrl=decodeURIComponent(window.location.href)
         var decodeHost = new URL(window.location.href).host
+
         if (!listOfAcceptDomains) {
             updateAcceptDomain();
             return
@@ -947,6 +1230,7 @@
         ) {
             // If the current page is in the list of accepted domains and is not a "quick bypass" link, run the bypass function
             let link = decodeUrl;
+            console.log(link)
             bypass(link);
         } else if (/\/===$/.test(decodeUrl)) {
             // If the current page is a "quick bypass" link, extract the link and run the appropriate bypass function
@@ -962,7 +1246,7 @@
                 let link = decodeUrl.replace(/\/===/gi, "");
                 bypass(link);
             }
-        } else if (new RegExp(dutchy, "ig").test(decodeUrl)) {
+        } else if (new RegExp(decodeHost, "ig").test(dutchy)) {
             // If the current page is a DutchyCorp shortlink page, check for specific error messages and reload the page if necessary
             if (
                 /Attention Required|A timeout occurred/gi.test(document.title)
@@ -994,6 +1278,8 @@
                     message
                 );
             } else {
+                localStorage.setItem('listOfAcceptDomains',GM_getValue('domains',''))
+                localStorage.setItem("_DontOpen",GM_getValue("_DontOpen",[]))
                 DEBUG && console.log("Bypass Can't Run on this Page");
             }
         } else {
