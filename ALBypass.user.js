@@ -683,12 +683,10 @@
 
             //GM_setValue('_DontOpen',JSON.stringify(GM_getValue('_DontOpen')))
             console.log(pathOrDomain)
-            var new_li =JSON.parse(GM_getValue('_DontOpen'))
-            //console.log(new_li)
-            
             updateDontOpen(pathOrDomain, [], message);
             return
-            
+            var new_li =JSON.parse(GM_getValue('_DontOpen'))
+            //console.log(new_li)
             if(pathOrDomain && !new_li.includes(pathOrDomain)){
                 new_li.push(pathOrDomain)
                 GM_setValue('_DontOpen',JSON.stringify(new_li))
